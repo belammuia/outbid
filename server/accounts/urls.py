@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CustomUserRegistrationView,CustomLogoutView
+from .views import CustomUserRegistrationView,CustomLogoutView, GetCurrentUserView
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 
 urlpatterns = [
@@ -7,4 +7,5 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name='login-user'),
     path('token/refresh/',TokenRefreshView.as_view(), name= 'token-refresh'),
     path('logout/', CustomLogoutView.as_view(), name='logout-user'),
+    path('whoami/', GetCurrentUserView.as_view(), name='get-current-user'),
 ]
