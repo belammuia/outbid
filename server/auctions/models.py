@@ -7,7 +7,7 @@ class Auction(models.Model):
         OPEN = "open"
         CLOSED = "closed"
 
-    title = models.CharField(max_length=120)
+    title = models.CharField(max_length=120, unique=True)
     description = models.TextField(blank=True)
     seller = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="auctions"

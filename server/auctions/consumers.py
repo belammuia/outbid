@@ -1,8 +1,16 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
-class AuctionConsumer(AsyncWebsocketConsumer):
+class AuctionConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        self.auction_id = self.scope['url_route']['kwargs']['auction_id']
-        await self.accept()
-        await self.send_json({'message': 'hello world'})
+        user = self.scope["user"]
+        if user.is_anonymous:
+            await self.close(code=4401)
+            return
+
+        self.auction_id = self.scope["url_route"]["kwargs"]["auction_id"]
+        await self.accept(subprotocol=self.scope.get("accepted_subprotocol"))
+        await self.send_json({"message": "hello world"})
+
+    async def disconnect(self, code):
+        pass

@@ -1,31 +1,48 @@
 from channels.db import database_sync_to_async
-from channels.middleware import BaseMiddleware
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError
+
+jwt_auth = JWTAuthentication()
 
 
 @database_sync_to_async
 def get_user_from_token(token):
-    User = get_user_model()
     try:
-        access_token = AccessToken(token)
-        user_id = access_token["user_id"]
-        return User.objects.get(id=user_id)
-    except (TokenError, InvalidToken, User.DoesNotExist, KeyError):
+        validated_token = jwt_auth.get_validated_token(token)
+        return jwt_auth.get_user(validated_token)
+    except (AuthenticationFailed, TokenError):
         return AnonymousUser()
 
 
-class JWTAuthMiddleware(BaseMiddleware):
+class JWTAuthMiddleware:
+    """Authenticate WebSocket connections with a JWT access token.
+
+    Looks for the token in the Authorization header first, then falls back
+    to the first subprotocol (the only option for browser clients).
+    """
+
+    def __init__(self, app):
+        self.app = app
 
     async def __call__(self, scope, receive, send):
-        subprotocols = scope.get("subprotocols", [])
-        token = subprotocols[0] if subprotocols else None
+        scope["user"] = AnonymousUser()
+        scope["accepted_subprotocol"] = None
 
-        if token is None:
-            scope["user"] = AnonymousUser()
+        headers = dict(scope.get("headers", []))
+        auth_header = headers.get(b"authorization", b"").decode()
+
+        token = None
+        if auth_header.startswith("Bearer "):
+            token = auth_header[len("Bearer "):]
         else:
+            subprotocols = scope.get("subprotocols", [])
+            if subprotocols:
+                token = subprotocols[0]
+                scope["accepted_subprotocol"] = token
+
+        if token:
             scope["user"] = await get_user_from_token(token)
 
-        return await super().__call__(scope, receive, send)
+        return await self.app(scope, receive, send)
