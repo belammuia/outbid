@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_celery_results',
+    'django_celery_beat',
 
     'auctions',
     'accounts',
@@ -171,3 +173,25 @@ CHANNEL_LAYERS = {
     },
 }
 
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+
+# Store task results in Django database for easy querying
+CELERY_RESULT_BACKEND = 'django-db'
+
+# Use JSON serialization for security (pickle can execute arbitrary code)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Set timezone to match Django settings
+CELERY_TIMEZONE = 'UTC'
+
+# Track when tasks start executing, not just when they complete
+CELERY_TASK_TRACK_STARTED = True
+
+# Prevent workers from prefetching too many tasks at once
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# Acknowledge tasks after they complete, not when received
+# This prevents task loss if a worker crashes mid-execution
+CELERY_TASK_ACKS_LATE = True

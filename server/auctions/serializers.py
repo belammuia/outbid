@@ -8,6 +8,6 @@ class AuctionSerializer(serializers.ModelSerializer):
         model = Auction
         fields = [
             "id", "title", "description", "start_price",
-            "current_price", "status", "seller",
+            "current_price", "status", "ends_at", "seller",
         ]
         read_only_fields = ["id","current_price", "status"]

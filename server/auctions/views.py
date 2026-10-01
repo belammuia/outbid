@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions
 from .models import Auction
 from .serializers import AuctionSerializer
+from .tasks import close_auction_task
+from django.db import transaction
 
 
 class IsSellerOrReadOnly(permissions.BasePermission):
@@ -16,7 +18,14 @@ class AuctionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsSellerOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(
+        auction = serializer.save(
             seller=self.request.user,
             current_price=serializer.validated_data["start_price"],
         )
+
+        transaction.on_commit(
+            lambda: close_auction_task.apply_async(
+            args=[auction.id],
+            eta=auction.ends_at,
+        )
+    )

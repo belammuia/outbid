@@ -15,6 +15,7 @@ class Auction(models.Model):
     start_price = models.DecimalField(max_digits=10, decimal_places=2)
     current_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
+    ends_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
