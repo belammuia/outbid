@@ -15,5 +15,16 @@ services:
     ports:
       - "6379:6379"
 
+  # celery_work:
+  #   build: .
+  #   container_name: celery_work
+  #   command: celery -A app worker --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - ./server/.env
+  #   depends_on:
+  #     - redis
+
 volumes:
   pgdata:

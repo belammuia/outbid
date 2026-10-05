@@ -6,7 +6,7 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [loading, setLoading] = useState(true)
-
+    const [user, setUser] = useState(null)
     // Restore authentication when the app loads
     useEffect(() => {
         const storedToken = localStorage.getItem('accessToken')

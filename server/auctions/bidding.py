@@ -1,8 +1,7 @@
-from .tasks import close_auction_task
+
 from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
-
 from .models import Auction, Bid
 
 ANTI_SNIPE_WINDOW = timedelta(seconds=30)
@@ -48,6 +47,7 @@ def place_bid(auction_id, user, amount):
         auction.save()
 
         if extended:
+            from .tasks import close_auction_task
             transaction.on_commit(
                 lambda: close_auction_task.apply_async(
                 args=[auction.id],

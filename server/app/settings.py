@@ -168,12 +168,11 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [os.environ.get('REDIS_URL'),'redis://redis:6379/0']
+            'hosts': [os.environ.get('REDIS_URL')],
         },
     },
 }
-
-CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
 # Store task results in Django database for easy querying
 CELERY_RESULT_BACKEND = 'django-db'

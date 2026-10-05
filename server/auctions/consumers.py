@@ -9,6 +9,7 @@ from decimal import Decimal
 
 
 
+
 class AuctionConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_auction(self, auction_id):
@@ -27,11 +28,17 @@ class AuctionConsumer(AsyncWebsocketConsumer):
     def build_snapshot(self, auction, recent_bids):
         return {
             "type": SNAPSHOT,
+            "status": auction.status,
             "current_price": str(auction.current_price),
             "ends_at": auction.ends_at.isoformat(),
             "server_time": timezone.now().isoformat(),
             "recent_bids": [
-                {"bidder": bid.bidder.display_name, "amount": str(bid.amount)}
+                {
+                    "id": bid.id,
+                    "bidder": bid.bidder.display_name, 
+                    "amount": str(bid.amount), 
+                    "created_at": bid.created_at.isoformat()
+                 }
                 for bid in recent_bids
             ],
         }
@@ -91,7 +98,7 @@ class AuctionConsumer(AsyncWebsocketConsumer):
                     "type": "broadcast_message",
                     "message": {
                         "type": BID_ACCEPTED,
-                        "amount": str(amount)
+                        "amount": str(ongoing_bid.amount)
                     }
                 }
             )
