@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react'
+import axios from 'axios'
 
 export const AuthContext = createContext()
 
@@ -7,19 +8,44 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState(null)
-    // Restore authentication when the app loads
+
     useEffect(() => {
         const storedToken = localStorage.getItem('accessToken')
 
         if (storedToken) {
             setToken(storedToken)
             setIsAuthenticated(true)
+            getMe(storedToken)
+        } else {
+            setLoading(false)
         }
-
-        setLoading(false)
     }, [])
 
-    // Save token after successful login
+
+    const getMe = async (accessToken) => {
+        try {
+            const response = await axios.get(
+                'http://localhost:8001/api/auth/v1/whoami/',
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            )
+
+            setUser(response.data)
+        } catch (error) {
+            console.error('Failed to get current user:', error)
+
+            localStorage.removeItem('accessToken')
+            setToken(null)
+            setIsAuthenticated(false)
+            setUser(null)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const setTokens = (newToken) => {
         if (!newToken) {
             return
@@ -28,22 +54,26 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', newToken)
         setToken(newToken)
         setIsAuthenticated(true)
+
+        getMe(newToken)
     }
 
-    // Remove token when logging out
     const logout = () => {
         localStorage.removeItem('accessToken')
         setToken(null)
         setIsAuthenticated(false)
+        setUser(null)
     }
 
     return (
         <AuthContext.Provider
             value={{
+                user,
                 token,
                 isAuthenticated,
                 loading,
                 setTokens,
+                getMe,
                 logout,
             }}
         >
@@ -51,3 +81,4 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     )
 }
+

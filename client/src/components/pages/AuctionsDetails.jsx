@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import AuctionTimer from "../timer/AuctionTimer";
 
 export default function AuctionsDetails() {
     const { id } = useParams();
@@ -50,6 +51,7 @@ export default function AuctionsDetails() {
         }
     }, [id, token]);
 
+
     // WebSocket
     useEffect(() => {
         if (!token || !id) {
@@ -72,6 +74,7 @@ export default function AuctionsDetails() {
             console.log("WebSocket message:", data);
 
             switch (data.type) {
+
                 case "snapshot":
                     setAuction((prev) => ({
                         ...prev,
@@ -81,6 +84,7 @@ export default function AuctionsDetails() {
 
                     setBids(data.recent_bids || []);
                     break;
+
 
                 case "bid_accepted":
                     setAuction((prev) => ({
@@ -99,9 +103,11 @@ export default function AuctionsDetails() {
                     setBidError(null);
                     break;
 
+
                 case "bid_rejected":
                     setBidError(data.reason);
                     break;
+
 
                 case "auction_extended":
                     setAuction((prev) => ({
@@ -110,6 +116,7 @@ export default function AuctionsDetails() {
                     }));
                     break;
 
+
                 case "auction_closed":
                     setAuction((prev) => ({
                         ...prev,
@@ -117,8 +124,12 @@ export default function AuctionsDetails() {
                     }));
                     break;
 
+
                 default:
-                    console.log("Unknown WebSocket event:", data);
+                    console.log(
+                        "Unknown WebSocket event:",
+                        data
+                    );
             }
         };
 
@@ -137,6 +148,7 @@ export default function AuctionsDetails() {
             ws.close();
         };
     }, [id, token]);
+
 
     const placeBid = () => {
         if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -157,18 +169,31 @@ export default function AuctionsDetails() {
         );
     };
 
-    // Conditional returns ONLY AFTER all hooks
+
+    // Loading
     if (loading) {
-        return <p>Loading auction...</p>;
+        return (
+            <div className="py-10 text-center">
+                <p className="text-gray-500">
+                    Loading auction...
+                </p>
+            </div>
+        );
     }
 
+
+    // Error
     if (error) {
         return (
-            <div>
-                <p className="text-red-600">{error}</p>
+            <div className="py-10">
+                <p className="text-red-600">
+                    {error}
+                </p>
 
                 <button
-                    onClick={() => navigate("/dashboard/auctions")}
+                    onClick={() =>
+                        navigate("/dashboard/auctions")
+                    }
                     className="mt-4 text-purple-700"
                 >
                     ← Back to auctions
@@ -177,20 +202,32 @@ export default function AuctionsDetails() {
         );
     }
 
+
+    // Auction not found
     if (!auction) {
-        return <p>Auction not found.</p>;
+        return (
+            <div className="py-10 text-center">
+                <p className="text-gray-500">
+                    Auction not found.
+                </p>
+            </div>
+        );
     }
+
 
     return (
         <div>
 
             {/* Back button */}
             <button
-                onClick={() => navigate("/dashboard/auctions")}
+                onClick={() =>
+                    navigate("/dashboard/auctions")
+                }
                 className="text-sm text-gray-500 hover:text-purple-700 mb-6"
             >
                 ← Back to auctions
             </button>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
@@ -201,22 +238,29 @@ export default function AuctionsDetails() {
                     </span>
                 </div>
 
+
                 {/* Auction information */}
                 <div>
 
+                    {/* Status + live connection */}
                     <div className="flex items-center justify-between">
+
                         <span
                             className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                auction.status === "OPEN"
+                                auction.status.toLowerCase() === "open"
                                     ? "bg-green-100 text-green-700"
                                     : "bg-red-100 text-red-700"
                             }`}
                         >
                             {auction.status}
                         </span>
+
                     </div>
 
+
+                    {/* WebSocket status */}
                     <div className="flex items-center gap-2 mt-2">
+
                         <span
                             className={`w-2 h-2 rounded-full ${
                                 socketConnected
@@ -230,28 +274,58 @@ export default function AuctionsDetails() {
                                 ? "Live"
                                 : "Connecting..."}
                         </span>
+
                     </div>
+
+
+                    {/* Title */}
                     <h1 className="text-3xl font-bold text-gray-900 mt-4">
                         {auction.title}
                     </h1>
 
+
+                    {/* Description */}
                     <p className="text-gray-500 mt-4 leading-relaxed">
                         {auction.description}
                     </p>
 
+
                     {/* Price */}
                     <div className="mt-8">
+
                         <p className="text-sm text-gray-500">
                             Current bid
                         </p>
 
                         <p className="text-4xl font-bold text-purple-700 mt-1">
-                            KSh {auction.current_price}
+                            KSh{" "}
+                            {Number(
+                                auction.current_price
+                            ).toLocaleString()}
                         </p>
+
                     </div>
+
+
+                    {/* Auction timer */}
+                    <div className="mt-6 bg-purple-50 border border-purple-100 rounded-xl p-5">
+
+                        <p className="text-sm text-gray-500">
+                            Time remaining
+                        </p>
+
+                        <div className="text-2xl font-bold text-purple-700 mt-1">
+                            <AuctionTimer
+                                endsAt={auction.ends_at}
+                            />
+                        </div>
+
+                    </div>
+
 
                     {/* Seller */}
                     <div className="mt-6">
+
                         <p className="text-sm text-gray-500">
                             Seller
                         </p>
@@ -259,21 +333,28 @@ export default function AuctionsDetails() {
                         <p className="font-medium text-gray-900 mt-1">
                             {auction.seller}
                         </p>
+
                     </div>
+
 
                     {/* End time */}
                     <div className="mt-6">
+
                         <p className="text-sm text-gray-500">
                             Ends at
                         </p>
 
                         <p className="font-medium text-gray-900 mt-1">
-                            {new Date(auction.ends_at).toLocaleString()}
+                            {new Date(
+                                auction.ends_at
+                            ).toLocaleString()}
                         </p>
+
                     </div>
 
+
                     {/* Bid section */}
-                    {auction.status === "open" && (
+                    {auction.status.toLowerCase() === "open" && (
                         <div className="mt-8">
 
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -286,7 +367,11 @@ export default function AuctionsDetails() {
                                     type="number"
                                     placeholder="Enter amount"
                                     value={bidAmount}
-                                    onChange={(e) => setBidAmount(e.target.value)}
+                                    onChange={(e) =>
+                                        setBidAmount(
+                                            e.target.value
+                                        )
+                                    }
                                     className="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
 
@@ -300,6 +385,14 @@ export default function AuctionsDetails() {
 
                             </div>
 
+
+                            {/* Bid error */}
+                            {bidError && (
+                                <p className="text-red-600 text-sm mt-2">
+                                    {bidError}
+                                </p>
+                            )}
+
                         </div>
                     )}
 
@@ -307,47 +400,62 @@ export default function AuctionsDetails() {
 
             </div>
 
-            {/* Bid history */}
 
             {/* Bid history */}
             <section className="mt-12">
+
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
                     Bid History
                 </h2>
 
                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+
                     {bids.length === 0 ? (
+
                         <p className="p-6 text-gray-500 text-center">
                             No bids yet
                         </p>
+
                     ) : (
+
                         <div className="divide-y divide-gray-100">
+
                             {bids.map((bid) => (
+
                                 <div
                                     key={bid.id}
                                     className="flex items-center justify-between px-6 py-4"
                                 >
+
                                     <div>
+
                                         <p className="font-medium text-gray-900">
                                             {bid.bidder}
                                         </p>
 
                                         <p className="text-sm text-gray-500">
-                                            {new Date(bid.created_at).toLocaleString()}
+                                            {new Date(
+                                                bid.created_at
+                                            ).toLocaleString()}
                                         </p>
+
                                     </div>
 
                                     <p className="font-semibold text-purple-700">
                                         KSh {bid.amount}
                                     </p>
+
                                 </div>
+
                             ))}
+
                         </div>
+
                     )}
+
                 </div>
+
             </section>
-
-
 
         </div>
     );

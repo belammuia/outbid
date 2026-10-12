@@ -1,8 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { use } from "react";
 
 export default function Navbar() {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const navigate = useNavigate();
 
     const links = [
@@ -53,7 +54,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
 
                     <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold">
-                        U
+                        <p>{user?.display_name ? user.display_name.charAt(0).toUpperCase() : '...'}</p>
                     </div>
 
                     <button

@@ -14,6 +14,7 @@ import Auctions from "./components/pages/Auctions";
 import AuctionsDetails from "./components/pages/AuctionsDetails";
 import MyAuctions from "./components/pages/MyAuctions";
 import MyBids from "./components/pages/MyBids";
+import CreateAuction from "./components/pages/CreateAuction";
 
 function App() {
     return (
@@ -38,6 +39,8 @@ function App() {
                     <Route path="auctions/:id" element={<AuctionsDetails />} />
 
                     <Route path="my-bids" element={<MyBids />} />
+
+                    <Route path='create-auction' element={<CreateAuction />} />
 
                     <Route path="my-auctions" element={<MyAuctions />} />
 
